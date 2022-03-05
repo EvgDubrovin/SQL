@@ -1,0 +1,94 @@
+We have a table Usage with datetime, user id and user activity.
+We need to calculate a number of churned users.
+
+		Usage
+----------------------------------------------
+      timestamp     |  user_id |  activity
+----------------------------------------------
+2021-02-01 03:42:22 | @lax_max |   read
+2021-02-01 09:46:14 | @Kchris  |   comment
+2021-02-04 02:42:24 | @PhotoRX |   sign-in
+2021-02-02 03:42:22 | @BobDoe  |   post 
+................... | ........ | ............
+
+Let's set a user as churned, if he didn't have any activities 
+(read, comment, like or post) for the last 7 days.
+
+# Solution 1:
+-------------------------------------------------------------
+WITH 
+Unique_users AS
+(
+SELECT DISTINCT user_id
+FROM Usage
+),
+Active_events AS
+(
+SELECT timestamp::date AS date,
+       user_id
+FROM Usage
+WHERE activity IN ('read', 'comment', 'like', 'post')
+),
+Active_users_past_7_days AS
+(
+SELECT DISTINCT(user_id)
+FROM Active_events
+WHERE date > CURRENT_DATE() - 7 
+)
+SELECT COUNT(*) AS num_of_churned_users
+FROM
+(
+SELECT user_id FROM Unique_users
+MINUS
+SELECT user_id FROM Active_users_past7days
+)
+;
+
+
+
+# Solution 2:
+-------------------------------------------------------------
+WITH cte_1 AS
+(
+SELECT timestamp, user_id, activity,
+       NOW() as current_dt
+FROM Usage
+)
+SELECT COUNT(DISTINCT user_id)
+FROM cte_1
+WHERE activity NOT IN ('read', 'comment', 'like', 'post')
+  AND EXTRACT(DAY FROM DATEDIFF(current_dt, timestamp)) > 7
+;
+
+
+
+# Solution 3:
+-----------------------------------------------------------------
+Calculating a Churn Rate
+1) Get all active users for a period.
+2) Get all users who had any activities for last 7 days.
+3) Subtract #2 from #1. Divide into #1.
+
+1) 
+SELECT COUNT(DISTINCT user_id) 
+FROM Usage;
+2)
+SELECT COUNT(DISTINCT user_id)
+FROM Usage
+WHERE activity IN('read', 'comment', 'like', 'post')
+AND NOW()::date - DATE_TRUNC('day', timestamp) < 7;
+3)
+SELECT 100*(
+   (SELECT COUNT(DISTINCT user_id) FROM Usage) 
+    MINUS
+   (SELECT COUNT(DISTINCT user_id) FROM Usage 
+    WHERE activity IN('read', 'comment', 'like', 'post')
+      AND NOW()::date - DATE_TRUNC('day', timestamp) < 7)
+       ) / 
+         (SELECT COUNT(DISTINCT user_id) FROM Usage)
+FROM Usage
+WHERE NOW()::date - DATE_TRUNC('day', timestamp) < 7)
+;
+
+
+
