@@ -36,8 +36,8 @@ WITH cte AS
 )
 SELECT birthday AS cohort,
        days_distance,
-       COUNT(DISTINCT user_id)
+       COUNT(DISTINCT user_id) /*4*/
 FROM cte
-GROUP BY cohort, days_distance /*4*/
+GROUP BY cohort, days_distance 
 ORDER BY cohort, days_distance
 ;
