@@ -1,0 +1,43 @@
+Calculate Retention Rate by cohorts for website users.
+
+Table events:
+---------------------------------------------------------
+id | AppPlatform |   events  | EventDate  |   DeviceID
+---|-------------|-----------|------------|--------------
+ 1 | android     |         8 | 2021-09-29 | 742929137325
+ 2 | android     |       175 | 2021-09-15 | 742929182467
+ 3 | android     |         0 | 2021-09-17 | 742929182467
+ 4 | android     |         0 | 2021-09-26 | 742929182467
+ 5 | android     |         4 | 2021-04-29 | 742929227395
+ 6 | android     |        38 | 2021-08-20 | 742929311145
+...|.............|...........|............|...............
+
+Way of proceeding:
+1. Find the user's "birthday" (date of registration / first action)
+2. Join Birthday to the table
+3. Calculate usage distance (EventDate - Birthday)
+4. Group by (birthday (cohorts) and distance) and count unique users 
+
+
+# Solution:
+-----------------------------------------------------------------------
+WITH cte AS
+(
+	SELECT l.date, l.user_id, l.device, l.num_events,
+       		r.birthday, /*3*/ DATEDIFF(l.date, birthday) AS days_distance
+	FROM events 
+  /*2*/ LEFT JOIN
+		(/*1*/
+		SELECT user_id, MIN(date) AS birthday
+		FROM events
+		GROUP BY user_id
+		) AS r
+	ON l.user_id = r.user_id
+)
+SELECT birthday AS cohort,
+       days_distance,
+       COUNT(DISTINCT user_id)
+FROM cte
+GROUP BY cohort, days_distance /*4*/
+ORDER BY cohort, days_distance
+;
