@@ -1,0 +1,40 @@
+Дано
+Дана таблица клиентов customer:
++---------------+-------------+-------------+-----------+--------------+---------------+--------+
+|  ID_CUSTOMER  |  ADDRESS_1  |  ADDRESS_2  |  COMPANY  |  FIRST_NAME  |  COUNTY_CODE  |  TOWN  |  LAST_NAME  |  POSTCODE  |  TELEPHONE  |
++---------------+-------------+-------------+-----------+--------------+---------------+--------+
+
+Дана таблица товаров skus:
++------+---------+------------+
+|  id  |  price  |  category  |
++------+---------+------------+
+
+Дана таблица продаж purchases:
++------+--------------+-----------+----------+
+|  id  |  created_at  |  user_id  |  sku_id  |
++------+--------------+-----------+----------+
+
+Задание
+Необходимо вывести среднюю стоимость 5-ой покупки с разбивкой по городам.
+Примечание: Если один и тот же человек совершал покупки, но в разное время, то это считаем за разные покупки.
+
+WITH
+  t1 AS
+(
+  SELECT 
+    id_customer, town,
+    price,
+    p.id, p.sku_id, created_at::date,
+    ROW_NUMBER() OVER(PARTITION BY town, id_customer ORDER BY created_at) as num_of_purchase
+  FROM 
+    customer c 
+      INNER JOIN purchases p ON c.id_customer = p.user_id
+      INNER JOIN skus s ON s.id = p.sku_id
+  ORDER BY town, id_customer, created_at
+)
+SELECT town, AVG(price) as avg_price_5th_purchase
+FROM t1
+WHERE num_of_purchase = 5
+GROUP BY town
+ORDER BY avg_price_5th_purchase DESC
+;
