@@ -1,0 +1,42 @@
+Calculate each user's average session time. For simplicity, assume a user has only 1 session per day and if there are multiple of the same events on that day, consider only the latest page_load and earliest page_exit. Output the user_id and their average session time.
+
+facebook_web_log:
+user_id | timestamp | action
+........|...........|.........
+
+
+Workflow:
+1. Select earliest page exit by client.
+2. Add latest page load by client.
+3. Calculate average session time as difference between #1 and #2. 
+
+WITH 
+page_exit AS 
+(
+    SELECT
+        user_id AS user_id_ex, 
+        timestamp::date AS date_ex, 
+        min(timestamp) AS earliest_page_exit 
+    FROM facebook_web_log
+    WHERE action = 'page_exit'
+    GROUP BY user_id_ex, date_ex
+), 
+page_load AS 
+(
+    SELECT
+        user_id AS user_id_l, 
+        timestamp::date AS date_l,
+        max(timestamp) AS latest_page_load 
+    FROM facebook_web_log
+    WHERE action = 'page_load'
+    GROUP BY user_id_l, date_l
+)
+SELECT
+    user_id_l AS user_id, 
+    AVG(earliest_page_exit - latest_page_load) as avg_session_time
+FROM 
+    page_exit ex INNER JOIN page_load l
+    ON l.user_id_l = ex.user_id_ex AND 
+    l.date_l = ex.date_ex
+GROUP BY user_id
+;
