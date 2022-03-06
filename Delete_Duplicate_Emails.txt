@@ -1,0 +1,19 @@
+Write an SQL query to delete all the duplicate emails, keeping only one unique email with the smallest id. Note that you are supposed to write a DELETE statement and not a SELECT one.
+
+table Person:
++----+------------------+
+| id | email            |
++----+------------------+
+| 1  | john@example.com |
+| 2  | bob@example.com  |
+| 3  | john@example.com |
++----+------------------+
+
+#1) Find min id for every email
+#2) If id is not min, delete them
+
+DELETE FROM Person
+WHERE id NOT IN 
+(SELECT * FROM
+ (SELECT MIN(id) FROM Person GROUP BY email) as t)
+;
