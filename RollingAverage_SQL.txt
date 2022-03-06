@@ -1,0 +1,37 @@
+Find a rolling average 3-month revenue
+ 
+table purchases:
+
+user_id | purchase_amt |    created_at
+--------|--------------|---------------------
+   1    |          350 | 2021-11-25 12:45:25
+   2    |          610 | 2021-11-25 16:26:52
+   3    |         -200 | 2021-11-26 08:17:10
+........|..............|.....................
+
+
+1) Get total revenue by months. Without refunds (amt < 0)
+
+SELECT DATE_TRUNC('month', created_at) AS month,
+       SUM(purchase_amt) AS revenue_month
+FROM purchases
+WHERE purchase_amt > 0
+GROUP BY month
+ORDER BY month
+;
+
+2) Calculate rolling average for 3 months with window function
+
+WITH monthly_revenue AS
+(
+SELECT DATE_TRUNC('month', created_at) AS month,
+       SUM(purchase_amt) AS revenue_month
+FROM purchases
+WHERE purchase_amt > 0
+GROUP BY month
+ORDER BY month
+)
+SELECT month,
+       AVG(revenue_month) OVER(ORDER BY month BETWEEN 2 PRECEDING AND CURRENT ROW)
+FROM monthly_revenue
+;
