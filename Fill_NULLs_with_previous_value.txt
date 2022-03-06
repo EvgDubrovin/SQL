@@ -1,0 +1,45 @@
+Fill NULLs with previous existing values from table
+table:
+client_id | date | value
+--- | --- | ---
+1 | 14.04.2021 | 10000
+1 | 15.04.2021 | 5000
+1 | 16.04.2021 | NaN
+1 | 17.04.2021 | NaN
+1 | 18.04.2021 | NaN
+2 | 14.04.2021 | 250000
+2 | 15.05.2021 | 250000
+2 | 16.04.2021 | 230000
+2 | 17.04.2021 | 230000
+2 | 18.04.2021 | 225000
+3 | 14.04.2021 | 50000
+3 | 15.05.2021 | NaN
+3 | 16.04.2021 | NaN
+3 | 17.04.2021 | NaN
+3 | 18.04.2021 | NaN
+
+
+
+#1 approach
+WITH grouped_table AS
+(
+SELECT client_id, date, value,
+       COUNT(value) OVER(PARTITION BY client_id ORDER BY date) as grp
+FROM table
+ORDER BY date
+)
+SELECT client_id, date, 
+       FIRST_VALUE() OVER(PARTITION BY grp ORDER BY date) AS new_val
+FROM grouped_table
+;
+
+
+
+#2 approach
+SELECT client_id, date, value,
+       ISNULL(value, 
+	      AVG(value) OVER(PARTITION BY client_id ORDER BY date ROWS BETWEEN 1 PRECEDING AND CURRENT ROW)
+	      ) as new_val
+FROM table
+ORDER BY client_id, date
+;
