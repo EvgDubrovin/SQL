@@ -1,0 +1,48 @@
+Write an SQL query to report the nth highest salary from the Employee table. If there is no nth highest salary, the query should report null.
+
+Input: 
+Employee table:
++----+--------+
+| id | salary |
++----+--------+
+| 1  | 100    |
+| 2  | 200    |
+| 3  | 300    |
++----+--------+
+n = 2
+       
+expected Output: 
++------------------------+
+| getNthHighestSalary(2) |
++------------------------+
+| 200                    |
++------------------------+
+
+
+#1
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+  RETURN (
+      WITH salary_rank AS (
+            SELECT salary, DENSE_RANK() OVER(ORDER BY salary DESC) as rnk
+            FROM Employee
+                           )
+      SELECT salary
+      FROM salary_rank
+      WHERE rnk = N
+      LIMIT 1
+  );
+END
+
+#2
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+  RETURN (
+      # Write your MySQL query statement below.
+      SELECT 
+        NTH_VALUE(salary, N) 
+        OVER(ORDER BY salary DESC RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS nth_val
+      FROM Employee
+      LIMIT 1
+  );
+END
