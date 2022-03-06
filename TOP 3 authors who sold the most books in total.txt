@@ -1,0 +1,55 @@
+Let’s say you have two SQL tables: authors and books.
+The *authors* dataset has 1M+ rows; here’s the first six rows:
+author_name	book_name
+author_1	book_1
+author_1	book_2
+author_2	book_3
+author_2	book_4
+author_2	book_5
+author_3	book_6
+…		…
+
+The *books* dataset also has 1M+ rows and here’s the first six:
+
+book_name	sold_copies
+book_1		   1000
+book_2		   1500
+book_3		   34000
+book_4		   29000
+book_5		   40000
+book_6		   4400
+…		   …
+
+Create an SQL query that shows the TOP 3 authors who sold the most books in total!
+
+#1
+WITH 
+total_sales AS
+(
+SELECT author_name, a.book_name, sold_copies,
+       SUM(sold_copies) OVER(PARTITION BY author_name ORDER BY sold_copies DESC) AS total_sold_copies
+FROM 
+authors a INNER JOIN books b 
+ON a.book_name=b.book_name
+),
+ranking AS
+(
+SELECT author_name, 
+       DENSE_RANK() OVER(ORDER BY total_sold_copies DESC) AS rnk
+FROM total_sales
+)
+SELECT author_name
+FROM ranking
+WHERE rnk <= 3
+;
+
+
+OR
+
+#2
+SELECT a.author_name, SUM(b.sold_copies) AS sold_copies
+FROM authors a INNER JOIN books b ON a.book_name=b.book_name
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 3
+;
