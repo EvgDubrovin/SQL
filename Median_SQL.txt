@@ -1,0 +1,41 @@
+Get a median department salary 
+
+table:
+  id  | department_id | employee_id |  salary
+------|---------------|-------------|----------
+ ...  |      ...      |      ...    |    ...
+
+#1
+
+WITH cte AS
+(
+SELECT DISTINCT department_id AS department_id, salary,
+       ROW_NUMBER() OVER(PARTITION BY department_id ORDER BY salary) 
+       	as ordered_salary,
+       LEAD(salary) OVER(PARTITION BY department_id ORDER BY salary)
+	as next_salary
+FROM table
+)
+SELECT department_id,
+       CASE
+       WHEN (SELECT MAX(ordered_salary) FROM cte) % 2 <> 0
+         AND ordered_salary = floor((SELECT MAX(ordered_salary) FROM cte) / 2)
+       THEN salary
+       WHEN (SELECT MAX(ordered_salary) FROM cte) % 2 = 0
+         AND ordered_salary = (SELECT MAX(ordered_salary) FROM cte) / 2
+       THEN (salary + next_salary) / 2
+       END AS median_salary
+FROM cte
+;
+
+
+OR
+
+
+#2
+
+SELECT DISTINCT department_id,
+       PERCENTILE_DISC(.5) WITHIN GROUP (ORDER BY salary)
+       OVER(PARTITION BY department_id) AS median
+FROM table
+;
