@@ -5,10 +5,10 @@ We need to calculate a number of churned users.
 ----------------------------------------------
       timestamp     |  user_id |  activity
 ----------------------------------------------
-2021-02-01 03:42:22 | @lax_max |   read
-2021-02-01 09:46:14 | @Kchris  |   comment
-2021-02-04 02:42:24 | @PhotoRX |   sign-in
-2021-02-02 03:42:22 | @BobDoe  |   post 
+2021-02-01 03:42:22 | @max     |   read
+2021-02-01 09:46:14 | @Chris   |   comment
+2021-02-04 02:42:24 | @Russ    |   sign-in
+2021-02-02 03:42:22 | @Bob     |   post 
 ................... | ........ | ............
 
 Let's set a user as churned, if he didn't have any activities 
